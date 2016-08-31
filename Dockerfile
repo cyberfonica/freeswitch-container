@@ -27,9 +27,9 @@ RUN ./install-deps.sh
 RUN rm install-deps.sh
 
 # Configure Fail2ban
-ADD conf/freeswitch.conf /etc/fail2ban/filter.d/freeswitch.conf
-ADD conf/freeswitch-dos.conf /etc/fail2ban/filter.d/freeswitch-dos.conf
-ADD conf/jail.local /etc/fail2ban/jail.local
+ADD fail2ban_conf/freeswitch.conf /etc/fail2ban/filter.d/freeswitch.conf
+ADD fail2ban_conf/freeswitch-dos.conf /etc/fail2ban/filter.d/freeswitch-dos.conf
+ADD fail2ban_conf/jail.local /etc/fail2ban/jail.local
 
 # Download FreeSWITCH.
 WORKDIR /usr/src
@@ -65,6 +65,9 @@ RUN chown -R freeswitch:daemon /usr/local/freeswitch
 RUN touch /usr/local/freeswitch/log/freeswitch.log
 RUN chown freeswitch:daemon /usr/local/freeswitch/log/freeswitch.log
 
+# Copy freeswitch configuration to path
+COPY freeswitch_conf /usr/local/freeswitch/conf/
+
 # We comment this because we'll run it with host networking
 # Open the container up to the world.
 # EXPOSE 5060/tcp 5060/udp 5080/tcp 5080/udp
@@ -73,4 +76,8 @@ RUN chown freeswitch:daemon /usr/local/freeswitch/log/freeswitch.log
 # EXPOSE 64535-65535/udp
 
 # Start the container.
-CMD service freeswitch start && tail -f /usr/local/freeswitch/log/freeswitch.log
+# Must set environment variables:
+# FREESWITCH_SIP_DOMAIN
+# FREESWITCH_DIRECTORY_GATEWAY_URL
+COPY ./entrypoint.sh /
+ENTRYPOINT ["/entrypoint.sh"]
